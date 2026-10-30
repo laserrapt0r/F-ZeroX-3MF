@@ -1,45 +1,47 @@
 # F-ZeroX-3MF
 
-Ein Python-Skript, das die Fahrzeuge aus **deiner eigenen ROM von *F-Zero X* (N64, Europa/PAL)** als 3D-druckbare Modelle exportiert: als wasserdichte **STL** und als **farbige 3MF**, eingefärbt wie im Spiel.
+A Python script that exports the vehicles from **your own ROM of *F-Zero X* (N64, European/PAL version)** as 3D-printable models: watertight **STL** files and **color 3MF** files painted like in the game.
 
-> ⚠️ **Dieses Repository enthält keine Spieldaten.** Es enthält weder Modelle noch Texturen noch die ROM. Alle Geometrie- und Farbdaten liest das Skript bei jedem Lauf aus deiner eigenen ROM. Bitte lade keine erzeugten Modelle, Renderbilder oder ROMs in dieses Repository hoch.
+> ⚠️ **This repository contains no game data.** It contains no models, no textures and no ROM. The script reads all geometry and color data from your own ROM every time it runs. Please do not upload generated models, renders or ROMs to this repository.
 
-![Beispielausgabe im Terminal](docs/screenshot_terminal.png)
+![Example terminal output](docs/screenshot_terminal.png)
 
-## Was das Skript erzeugt
+## What the script produces
 
-Für jedes der 30 Fahrzeuge:
+For each of the 30 vehicles:
 
-| Datei | Inhalt |
+| File | Contents |
 |---|---|
-| `NN_name.stl` | Geschlossener, wasserdichter Volumenkörper aus den Original-Polygonen (höchste Detailstufe), einfarbig |
-| `NN_name_farbig.3mf` | Dasselbe Modell, die Flächen entlang der Farbgrenzen der Texturen aufgeteilt (Startnummern, Schriftzüge, Streifen). Die Farben sind als Filament-Bemalung gespeichert, die OrcaSlicer, Anycubic Slicer Next und Bambu Studio lesen. |
-| `NN_name_farbig.obj` + `.mtl` | Farbiges Modell als OBJ mit Materialfarben |
-| `NN_name_render_*.png` | nur mit `--render`: Renderbilder aus 6 Perspektiven plus Übersichtsbild |
-| `00_uebersicht.png` | nur mit `--render`: alle erzeugten Fahrzeuge mit ihren Farben auf einem Bild |
+| `NN_name.stl` | Closed, watertight solid built from the original polygons (highest level of detail), single color |
+| `NN_name_farbig.3mf` | The same model with its faces split along the color borders of the textures (race numbers, lettering, stripes). Colors are stored as filament painting, which OrcaSlicer, Anycubic Slicer Next and Bambu Studio can read. |
+| `NN_name_farbig.obj` + `.mtl` | Color model as OBJ with material colors |
+| `NN_name_render_*.png` | only with `--render`: renders from 6 viewpoints plus an overview image |
+| `00_uebersicht.png` | only with `--render`: all generated vehicles with their colors in one image |
 
-Weitere Eigenschaften:
-- **Maßstab:** Alle Fahrzeuge haben denselben Maßstab, die Blue Falcon ist 100 mm lang. Mit `--length` änderst du das.
-- **Dünne Flächen:** Finnen und Flügel sind im Spiel unendlich dünn. Das Skript verdickt sie auf 1,2 mm (`--thick`).
-- **Schwebende Teile:** Teile, die im Spiel frei schweben, bekommen einen kleinen Steg zum Rumpf.
-- **Farben:** Alle Farben eines Fahrzeugs bleiben erhalten, je nach Fahrzeug sind das etwa 6 bis 11. Die Kanten der Schriftzüge werden geglättet (Scale2x), mit `--smooth 1` bekommst du die pixelgenaue Original-Optik.
+(*farbig* = colored, *uebersicht* = overview. The script's output and file names are in German.)
 
-## Voraussetzungen
+Further properties:
+- **Scale:** All vehicles share the same scale; the Blue Falcon is 100 mm long. Change it with `--length`.
+- **Thin surfaces:** Fins and wings have zero thickness in the game. The script thickens them to 1.2 mm (`--thick`).
+- **Floating parts:** Parts that float freely in the game get a small strut connecting them to the body.
+- **Colors:** All colors of a vehicle are kept; depending on the vehicle that is about 6 to 11. Lettering edges are smoothed (Scale2x); use `--smooth 1` for the pixel-exact original look.
 
-### 1. Die europäische ROM (PAL)
+## Requirements
 
-Das Skript funktioniert **nur mit der europäischen Version** von F-Zero X. Die US- und die japanische Version haben andere Adressen und werden abgelehnt.
+### 1. The European ROM (PAL)
+
+The script **only works with the European version** of F-Zero X. The US and Japanese versions use different addresses and are rejected.
 
 | | |
 |---|---|
-| Spiel | F-Zero X (Europe), N64, Revision 0, Spielcode `NFZP` |
+| Game | F-Zero X (Europe), N64, revision 0, game code `NFZP` |
 | MD5 (.z64) | `ee79a8fe287b5dcaea584439363342fc` |
 | SHA-1 (.z64) | `af9038bcb543a2b4faaab876dbdab4663859e092` |
-| Größe | 16 MiB (16.777.216 Bytes) |
+| Size | 16 MiB (16,777,216 bytes) |
 
-Das Skript prüft die MD5-Summe bei jedem Start und bricht bei einer anderen ROM mit einer Fehlermeldung ab. Die Formate `.v64` (byte-getauscht) und `.n64` (little-endian) werden vor der Prüfung automatisch in `.z64` umgewandelt. Die Prüfsumme oben gilt für die `.z64`-Daten.
+The script checks the MD5 checksum every time it starts and stops with an error message if the ROM is different. The `.v64` (byte-swapped) and `.n64` (little-endian) formats are converted to `.z64` automatically before the check. The checksum above applies to the `.z64` data.
 
-So prüfst du deine ROM selbst:
+To check your ROM yourself:
 
 ```bash
 # Linux
@@ -50,29 +52,29 @@ md5 "F-Zero X (Europe).z64"
 Get-FileHash "F-Zero X (Europe).z64" -Algorithm MD5
 ```
 
-Die ROM wird **nicht** mitgeliefert. Erstelle eine Sicherungskopie deines eigenen Moduls, zum Beispiel mit einem Cartridge-Dumper.
+The ROM is **not** included. Make a backup of your own cartridge, for example with a cartridge dumper.
 
-### 2. Python 3.10 oder neuer
+### 2. Python 3.10 or newer
 
-Das Skript wurde mit Python 3.13 getestet. Prüfen: `python3 --version`. Unter Windows heißt der Befehl meist `py` oder `python`.
+The script was tested with Python 3.13. Check with `python3 --version`. On Windows the command is usually `py` or `python`.
 
-### 3. Python-Pakete
+### 3. Python packages
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Das installiert:
+This installs:
 
-| Paket | Wofür |
+| Package | Used for |
 |---|---|
-| `numpy`, `scipy` | Rechnen |
-| `trimesh`, `rtree` | Netzverarbeitung und Prüfung auf Wasserdichtheit |
-| `manifold3d` | Boolesche Vereinigung zu einem geschlossenen Körper |
-| `triangle` | Aufteilen der Flächen entlang der Farbgrenzen |
-| `pillow` | Renderbilder |
+| `numpy`, `scipy` | Computation |
+| `trimesh`, `rtree` | Mesh processing and watertightness checks |
+| `manifold3d` | Boolean union into a single closed solid |
+| `triangle` | Splitting faces along color borders |
+| `pillow` | Renders |
 
-Empfohlen ist eine eigene virtuelle Umgebung:
+A separate virtual environment is recommended:
 
 ```bash
 python3 -m venv .venv
@@ -80,66 +82,66 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Ein Grafiktreiber oder Blender ist nicht nötig. Auch die Renderbilder rechnet das Skript selbst.
+No graphics driver or Blender is needed. The script computes the renders itself.
 
-## Benutzung
+## Usage
 
 ```bash
-# alle 30 Fahrzeuge als STL + farbige 3MF/OBJ
-python3 fzx_models.py "F-Zero X (Europe).z64" -o ausgabe
+# all 30 vehicles as STL + color 3MF/OBJ
+python3 fzx_models.py "F-Zero X (Europe).z64" -o output
 
-# zusätzlich Renderbilder aus 6 Perspektiven + Gesamtübersicht
-python3 fzx_models.py "F-Zero X (Europe).z64" -o ausgabe --render
+# also renders from 6 viewpoints + overall overview
+python3 fzx_models.py "F-Zero X (Europe).z64" -o output --render
 
-# nur bestimmte Fahrzeuge (Namen siehe --list)
-python3 fzx_models.py "F-Zero X (Europe).z64" -o ausgabe -m blue_falcon -m golden_fox
+# only specific vehicles (names: see --list)
+python3 fzx_models.py "F-Zero X (Europe).z64" -o output -m blue_falcon -m golden_fox
 
-# Liste aller Fahrzeuge (ohne ROM)
+# list all vehicles (no ROM needed)
 python3 fzx_models.py --list
 ```
 
-Laufzeit: etwa 4 Sekunden pro Fahrzeug, mit `--render` etwa 30 Sekunden.
+Run time: about 4 seconds per vehicle, about 30 seconds with `--render`.
 
-### Optionen
+### Options
 
-| Option | Bedeutung | Standard |
+| Option | Meaning | Default |
 |---|---|---|
-| `-o ORDNER` | Ausgabeordner | `fzerox_modelle` |
-| `-m NAME` | nur dieses Fahrzeug, mehrfach angebbar | alle |
-| `--length MM` | Länge der Blue Falcon in mm. Alle anderen werden im selben Verhältnis skaliert. | `100` |
-| `--thick MM` | Mindestdicke für hauchdünne Flächen | `1.2` |
-| `--skin 0-3` | Lackierung: 0 = Standard, 1–3 = die alternativen Lackierungen aus dem Spiel | `0` |
-| `--smooth N` | Kantenglättung der Decals: `1` = pixelgenau, `2/4/8/16` = Pixel-Art-Hochskalierung | `8` |
-| `--max-colors N` | Obergrenze für die Anzahl der Farben | `16` |
-| `--merge DE` | Farben mit einem Farbabstand (CIE Delta E) unter diesem Wert zusammenfassen | `12` |
-| `--map "8=1,4=3"` | Farben gezielt zusammenlegen, zum Beispiel Farbe 8 → 1. Die Nummern stehen in der Ausgabe. | – |
-| `--no-color` | nur STL erzeugen | – |
-| `--render` | Renderbilder erzeugen | – |
-| `--views a,b,…` | Perspektiven: `vorne_links, hinten_rechts, seite, oben, vorne, hinten` | alle |
-| `--render-size BxH` | Bildgröße der Renderbilder | `2400x1600` |
+| `-o DIR` | Output directory | `fzerox_modelle` |
+| `-m NAME` | Only this vehicle; can be given multiple times | all |
+| `--length MM` | Length of the Blue Falcon in mm. All other vehicles are scaled by the same factor. | `100` |
+| `--thick MM` | Minimum thickness for zero-thickness surfaces | `1.2` |
+| `--skin 0-3` | Paint scheme: 0 = default, 1–3 = the alternative paint schemes from the game | `0` |
+| `--smooth N` | Edge smoothing for decals: `1` = pixel-exact, `2/4/8/16` = pixel-art upscaling | `8` |
+| `--max-colors N` | Upper limit for the number of colors | `16` |
+| `--merge DE` | Merge colors whose color difference (CIE Delta E) is below this value | `12` |
+| `--map "8=1,4=3"` | Merge specific colors, e.g. color 8 → 1. The numbers are shown in the output. | – |
+| `--no-color` | Only create STL files | – |
+| `--render` | Create renders | – |
+| `--views a,b,…` | Viewpoints: `vorne_links` (front left), `hinten_rechts` (rear right), `seite` (side), `oben` (top), `vorne` (front), `hinten` (rear) | all |
+| `--render-size WxH` | Render size in pixels | `2400x1600` |
 
-## Mehrfarbig drucken
+## Multi-color printing
 
-1. Wähle im Slicer zuerst einen **Mehrfarbdrucker** aus, zum Beispiel einen mit Anycubic ACE, Bambu AMS oder Prusa MMU.
-2. Lege **so viele Filamente an, wie das Fahrzeug Farben hat**, und stelle die Farben in der Reihenfolge ein, die die Ausgabe des Skripts nennt. Die Reihenfolge steht auch in der Übersicht.
-3. **Erst danach** die `_farbig.3mf` in das Projekt ziehen.
+1. In your slicer, first select a **multi-color printer**, for example one with an Anycubic ACE, Bambu AMS or Prusa MMU.
+2. Add **as many filaments as the vehicle has colors** and set their colors in the order listed in the script's output. The order is also shown in the overview image.
+3. **Only then** drag the `_farbig.3mf` file into the project.
 
-Wenn beim Laden zu wenige Filamente eingestellt sind, setzen die Slicer der Orca-Familie die überzähligen Farben auf Filament 1 zurück, und das Modell erscheint einfarbig. Hast du weniger Filament-Slots als Farben, kannst du mehreren Filamenten dieselbe Spule zuweisen oder die Farben mit `--map` zusammenlegen.
+If too few filaments are set up when the file is loaded, slicers of the Orca family reset the extra colors to filament 1, and the model appears single-colored. If you have fewer filament slots than colors, you can assign the same spool to several filaments or merge colors with `--map`.
 
-Mit einem **Einfarbdrucker** druckst du die `.stl` und bemalst sie anschließend. Die Renderbilder dienen dabei als Vorlage.
+With a **single-color printer**, print the `.stl` and paint it afterwards. The renders can serve as a reference.
 
-## Wie es funktioniert
+## How it works
 
-1. **ROM lesen und prüfen:** Das Skript prüft die MD5-Summe der ROM.
-2. **Geometrie:** Die Fahrzeuge werden im Spiel nicht als fertige Modelle gespeichert, sondern zur Laufzeit von Code erzeugt (Display-Listen). Das Skript enthält eine kompakte Beschreibung dieser Display-Listen: ROM-Adressen der Eckpunkte und Texturen sowie Dreiecksindizes. Abgeleitet ist sie aus dem öffentlichen, unter CC0 stehenden Decompilation-Projekt [inspectredc/fzerox](https://github.com/inspectredc/fzerox). Die eigentlichen Koordinaten, Texturen und Farben liest das Skript aus deiner ROM.
-3. **Farben:** Der N64-Color-Combiner wird nachgerechnet, also Karosseriefarbe, Decal-Texturen und Primär- und Umgebungsfarben. Gleiche Farbtöne werden zu einer Palette zusammengefasst.
-4. **Farbflächen:** Jedes Dreieck wird entlang der Farbgrenzen seiner Textur aufgeteilt (Constrained Delaunay Triangulation). Die Teilungspunkte auf gemeinsamen Kanten stimmen exakt überein, deshalb bleibt das Netz geschlossen.
-5. **Volumenkörper:** Geschlossene Hüllen werden übernommen und kleine Löcher geschlossen. Doppelseitige Flächen werden zu Platten mit Mindestdicke. Alles wird mit [Manifold](https://github.com/elalish/manifold) zu einem einzigen wasserdichten Körper vereinigt.
-6. **Export:** STL, OBJ/MTL und 3MF mit Filament-Bemalung. Die Bemalung steht im Attribut `paint_color` für Orca und Bambu und zusätzlich in `slic3rpe:mmu_segmentation` für das PrusaSlicer-Format.
+1. **Read and check the ROM:** The script checks the ROM's MD5 checksum.
+2. **Geometry:** The game does not store the vehicles as finished models; they are built at runtime by code (display lists). The script contains a compact description of these display lists: ROM addresses of the vertices and textures plus triangle indices. It is derived from the public decompilation project [inspectredc/fzerox](https://github.com/inspectredc/fzerox), which is released under CC0. The actual coordinates, textures and colors are read from your ROM.
+3. **Colors:** The N64 color combiner is recomputed, i.e. body color, decal textures, and primitive and environment colors. Matching shades are merged into a palette.
+4. **Color regions:** Every triangle is split along the color borders of its texture (constrained Delaunay triangulation). The split points on shared edges match exactly, so the mesh stays closed.
+5. **Solid:** Closed shells are kept and small holes are filled. Double-sided surfaces become plates with a minimum thickness. Everything is merged with [Manifold](https://github.com/elalish/manifold) into a single watertight solid.
+6. **Export:** STL, OBJ/MTL and 3MF with filament painting. The painting is stored in the `paint_color` attribute for Orca and Bambu and additionally in `slic3rpe:mmu_segmentation` for the PrusaSlicer format.
 
-## Rechtliches
+## Legal
 
-- *F-Zero*, *F-Zero X* sowie die Namen der Fahrzeuge und Figuren sind Marken bzw. urheberrechtlich geschützte Werke von **Nintendo**. Dieses Projekt steht in keiner Verbindung zu Nintendo und wird von Nintendo weder unterstützt noch geprüft.
-- Das Repository enthält **keine** urheberrechtlich geschützten Spieldaten: keine ROM, keine Modelle, keine Texturen, keine Bilder aus dem Spiel. Die eingebetteten Adressen und Indizes stammen aus dem CC0-lizenzierten Decompilation-Projekt [inspectredc/fzerox](https://github.com/inspectredc/fzerox).
-- Verwende das Skript nur mit einer ROM, die du rechtmäßig besitzt. Die erzeugten Modelle sind für den **privaten Gebrauch** gedacht. Bitte veröffentliche oder verkaufe sie nicht.
-- Der Code dieses Projekts steht unter der [MIT-Lizenz](LICENSE).
+- *F-Zero*, *F-Zero X* and the names of the vehicles and characters are trademarks or copyrighted works of **Nintendo**. This project is not affiliated with, endorsed by or reviewed by Nintendo.
+- This repository contains **no** copyrighted game data: no ROM, no models, no textures, no images from the game. The embedded addresses and indices come from the CC0-licensed decompilation project [inspectredc/fzerox](https://github.com/inspectredc/fzerox).
+- Only use the script with a ROM you legally own. The generated models are intended for **private use**. Please do not publish or sell them.
+- The code of this project is released under the [MIT License](LICENSE).
