@@ -1,0 +1,17 @@
+# ROMs - never commit
+*.z64
+*.v64
+*.n64
+*.rom
+# generated output
+fzerox_modelle/
+ausgabe/
+*.stl
+*.3mf
+*.obj
+*.mtl
+*_render_*.png
+00_uebersicht.png
+# python
+__pycache__/
+.venv/
