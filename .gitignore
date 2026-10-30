@@ -4,14 +4,14 @@
 *.n64
 *.rom
 # generated output
-fzerox_modelle/
-ausgabe/
+fzerox_models/
+output/
 *.stl
 *.3mf
 *.obj
 *.mtl
 *_render_*.png
-00_uebersicht.png
+00_overview.png
 # python
 __pycache__/
 .venv/

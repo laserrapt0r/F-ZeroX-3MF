@@ -13,12 +13,10 @@ For each of the 30 vehicles:
 | File | Contents |
 |---|---|
 | `NN_name.stl` | Closed, watertight solid built from the original polygons (highest level of detail), single color |
-| `NN_name_farbig.3mf` | The same model with its faces split along the color borders of the textures (race numbers, lettering, stripes). Colors are stored as filament painting, which OrcaSlicer, Anycubic Slicer Next and Bambu Studio can read. |
-| `NN_name_farbig.obj` + `.mtl` | Color model as OBJ with material colors |
+| `NN_name_color.3mf` | The same model with its faces split along the color borders of the textures (race numbers, lettering, stripes). Colors are stored as filament painting, which OrcaSlicer, Anycubic Slicer Next and Bambu Studio can read. |
+| `NN_name_color.obj` + `.mtl` | Color model as OBJ with material colors |
 | `NN_name_render_*.png` | only with `--render`: renders from 6 viewpoints plus an overview image |
-| `00_uebersicht.png` | only with `--render`: all generated vehicles with their colors in one image |
-
-(*farbig* = colored, *uebersicht* = overview. The script's output and file names are in German.)
+| `00_overview.png` | only with `--render`: all generated vehicles with their colors in one image |
 
 Further properties:
 - **Scale:** All vehicles share the same scale; the Blue Falcon is 100 mm long. Change it with `--length`.
@@ -106,7 +104,7 @@ Run time: about 4 seconds per vehicle, about 30 seconds with `--render`.
 
 | Option | Meaning | Default |
 |---|---|---|
-| `-o DIR` | Output directory | `fzerox_modelle` |
+| `-o DIR` | Output directory | `fzerox_models` |
 | `-m NAME` | Only this vehicle; can be given multiple times | all |
 | `--length MM` | Length of the Blue Falcon in mm. All other vehicles are scaled by the same factor. | `100` |
 | `--thick MM` | Minimum thickness for zero-thickness surfaces | `1.2` |
@@ -117,14 +115,14 @@ Run time: about 4 seconds per vehicle, about 30 seconds with `--render`.
 | `--map "8=1,4=3"` | Merge specific colors, e.g. color 8 → 1. The numbers are shown in the output. | – |
 | `--no-color` | Only create STL files | – |
 | `--render` | Create renders | – |
-| `--views a,b,…` | Viewpoints: `vorne_links` (front left), `hinten_rechts` (rear right), `seite` (side), `oben` (top), `vorne` (front), `hinten` (rear) | all |
+| `--views a,b,…` | Viewpoints: `front_left`, `rear_right`, `side`, `top`, `front`, `rear` | all |
 | `--render-size WxH` | Render size in pixels | `2400x1600` |
 
 ## Multi-color printing
 
 1. In your slicer, first select a **multi-color printer**, for example one with an Anycubic ACE, Bambu AMS or Prusa MMU.
 2. Add **as many filaments as the vehicle has colors** and set their colors in the order listed in the script's output. The order is also shown in the overview image.
-3. **Only then** drag the `_farbig.3mf` file into the project.
+3. **Only then** drag the `_color.3mf` file into the project.
 
 If too few filaments are set up when the file is loaded, slicers of the Orca family reset the extra colors to filament 1, and the model appears single-colored. If you have fewer filament slots than colors, you can assign the same spool to several filaments or merge colors with `--map`.
 

@@ -1,41 +1,42 @@
 #!/usr/bin/env python3
 """
-F-ZeroX-3MF  -  F-Zero X (N64, Europa/PAL) -> 3D-druckbare Fahrzeugmodelle
-==========================================================================
+F-ZeroX-3MF  -  F-Zero X (N64, Europe/PAL) -> 3D-printable vehicle models
+=========================================================================
 
-Liest die Fahrzeuggeometrie (hoechste Detailstufe) und die Decal-Texturen direkt
-aus deiner eigenen ROM und erzeugt pro Fahrzeug:
+Reads the vehicle geometry (highest level of detail) and the decal textures
+directly from your own ROM and creates for each vehicle:
 
-  <nr>_<name>.stl              geschlossener, wasserdichter Volumenkoerper
-                               (Original-Polygone, glatte Flaechen)
-  <nr>_<name>_farbig.3mf       dasselbe Modell, Flaechen entlang der Farbgrenzen
-                               der Texturen aufgeteilt; Farben als Filament-
-                               Bemalung (OrcaSlicer, Anycubic Slicer Next,
-                               Bambu Studio)
-  <nr>_<name>_farbig.obj/.mtl  dasselbe als OBJ mit Materialfarben
-  --render: Renderbilder aus mehreren Perspektiven + Gesamtuebersicht
+  <nr>_<name>.stl             closed, watertight solid
+                              (original polygons, flat faces)
+  <nr>_<name>_color.3mf       the same model, faces split along the color
+                              borders of the textures; colors stored as
+                              filament painting (OrcaSlicer, Anycubic Slicer
+                              Next, Bambu Studio)
+  <nr>_<name>_color.obj/.mtl  the same as OBJ with material colors
+  --render: renders from several viewpoints + overall overview
 
-Benoetigt die EUROPAEISCHE ROM (PAL), .z64 (.v64/.n64 werden automatisch
-umgewandelt). Das Skript prueft die MD5-Summe der .z64-Daten:
+Requires the EUROPEAN ROM (PAL), .z64 (.v64/.n64 are converted
+automatically). The script verifies the MD5 checksum of the .z64 data:
   ee79a8fe287b5dcaea584439363342fc
 
-Nutzung:
-  python3 fzx_models.py "F-Zero X (Europe).z64" -o ausgabe
-  python3 fzx_models.py ROM -o ausgabe --render
-  python3 fzx_models.py ROM -o ausgabe -m blue_falcon -m golden_fox
-  python3 fzx_models.py ROM --list
+Usage:
+  python3 fzx_models.py "F-Zero X (Europe).z64" -o output
+  python3 fzx_models.py ROM -o output --render
+  python3 fzx_models.py ROM -o output -m blue_falcon -m golden_fox
+  python3 fzx_models.py --list
   python3 fzx_models.py --help
 
-Abhaengigkeiten:  pip install numpy trimesh manifold3d triangle pillow
+Dependencies:  pip install -r requirements.txt
+               (numpy scipy trimesh rtree manifold3d triangle pillow)
 
-Das Skript enthaelt KEINE Spieldaten (keine Geometrie, keine Texturen, keine
-Farben). Es enthaelt nur Adressen und Indizes, die beschreiben, wo die Daten in
-der ROM liegen und wie die Display-Listen sie verknuepfen. Diese Angaben sind
-aus dem oeffentlichen, unter CC0 stehenden Decompilation-Projekt
-https://github.com/inspectredc/fzerox abgeleitet.
+This script contains NO game data (no geometry, no textures, no colors). It
+only contains addresses and indices that describe where the data is located in
+the ROM and how the display lists connect it. This information is derived from
+the public decompilation project https://github.com/inspectredc/fzerox, which
+is released under CC0.
 
-Lizenz: MIT (siehe LICENSE). F-Zero ist eine Marke von Nintendo; dieses Projekt
-steht in keiner Verbindung zu Nintendo.
+License: MIT (see LICENSE). F-Zero is a trademark of Nintendo; this project is
+not affiliated with Nintendo.
 """
 import argparse, base64, hashlib, json, os, struct, sys, uuid, zipfile, zlib
 import numpy as np
@@ -189,9 +190,9 @@ def load_rom(path):
         d = np.frombuffer(d, '<u4').astype('>u4').tobytes()
     md5 = hashlib.md5(d).hexdigest()
     if md5 != PAL_MD5:
-        sys.exit(f'Falsche ROM: MD5 {md5}\n'
-                 f'Benoetigt wird F-Zero X (Europe, PAL) mit MD5 {PAL_MD5} (Format .z64).\n'
-                 'Die US- und die japanische Version werden nicht unterstuetzt.')
+        sys.exit(f'Wrong ROM: MD5 {md5}\n'
+                 f'Required: F-Zero X (Europe, PAL) with MD5 {PAL_MD5} (.z64 format).\n'
+                 'The US and Japanese versions are not supported.')
     print(f'ROM OK: F-Zero X (Europe), MD5 {md5}')
     return d
 
@@ -561,7 +562,7 @@ def classify_and_cap(m, key, wid, WF, good, log=print):
             new_faces.append((c, col))
             cap_ids.append(len(m.faces) + len(new_faces) - 1)
         solids.append(list(fs) + cap_ids)
-        log(f'      {len(caps)} Loch-Dreiecke geschlossen')
+        log(f'      closed a hole with {len(caps)} triangle(s)')
     for a, b in twin.items():
         if a < b:
             plates.append((a, b))
@@ -808,7 +809,7 @@ def build(model, mm_per_unit, thick, res, merge_de, max_colors, colored=True, lo
                                             tri_verts=np.array(np.asarray(cm.tri_verts), dtype=np.uint64, order='C').reshape(-1, 3),
                                             face_id=np.full(len(np.asarray(cm.tri_verts)), lab, np.uint64)))
                 extra.append(cap)
-                log(f'      Steg zu losem Teil ({c.volume():.0f} mm3, Abstand {dist[k]:.2f} mm)')
+                log(f'      added strut to loose part ({c.volume():.0f} mm3, gap {dist[k]:.2f} mm)')
             grown = []
             for c in parts[1:]:
                 bb = np.asarray(c.bounding_box()).reshape(2, 3)
@@ -842,7 +843,7 @@ def build(model, mm_per_unit, thick, res, merge_de, max_colors, colored=True, lo
         V = V[used]; F = rm[F]
     else:
         V = V32
-        log(f'      Hinweis: {int((ec != 2).sum())} Beruehrungskanten bleiben als getrennte Kanten erhalten')
+        log(f'      note: {int((ec != 2).sum())} touching edges kept as separate edges')
     shift = np.r_[-(V[:, :2].min(0) + V[:, :2].max(0)) / 2, -V[:, 2].min()]
     V = V + shift
     info = dict(n_solids=len(solids), n_plates=len(plates), bodies=nb)
@@ -851,13 +852,13 @@ def build(model, mm_per_unit, thick, res, merge_de, max_colors, colored=True, lo
 
 # ---------------------------------------------------------------- export
 COLOR_NAMES = {
-    'schwarz': (20, 20, 20), 'dunkelgrau': (75, 75, 75), 'grau': (128, 128, 128), 'hellgrau': (190, 190, 190),
-    'weiss': (245, 245, 245), 'rot': (220, 20, 20), 'dunkelrot': (130, 15, 30), 'orange': (240, 120, 20),
-    'gelb': (250, 220, 30), 'gold': (205, 165, 50), 'oliv': (100, 100, 20), 'gruen': (20, 160, 60),
-    'dunkelgruen': (15, 70, 30), 'hellgruen': (140, 220, 40), 'petrol': (0, 110, 110), 'tuerkis': (60, 200, 210),
-    'hellblau': (120, 170, 220), 'blau': (20, 40, 230), 'marine': (15, 20, 70), 'lila': (120, 60, 190),
-    'violett': (160, 90, 230), 'magenta': (220, 40, 160), 'pink': (240, 90, 140), 'braun': (110, 70, 30),
-    'beige': (200, 180, 120), 'stahlblau': (70, 80, 150),
+    'black': (20, 20, 20), 'dark_grey': (75, 75, 75), 'grey': (128, 128, 128), 'light_grey': (190, 190, 190),
+    'white': (245, 245, 245), 'red': (220, 20, 20), 'dark_red': (130, 15, 30), 'orange': (240, 120, 20),
+    'yellow': (250, 220, 30), 'gold': (205, 165, 50), 'olive': (100, 100, 20), 'green': (20, 160, 60),
+    'dark_green': (15, 70, 30), 'light_green': (140, 220, 40), 'teal': (0, 110, 110), 'turquoise': (60, 200, 210),
+    'light_blue': (120, 170, 220), 'blue': (20, 40, 230), 'navy': (15, 20, 70), 'purple': (120, 60, 190),
+    'violet': (160, 90, 230), 'magenta': (220, 40, 160), 'pink': (240, 90, 140), 'brown': (110, 70, 30),
+    'beige': (200, 180, 120), 'steel_blue': (70, 80, 150),
 }
 
 
@@ -946,12 +947,12 @@ def write_orca_3mf(path, V, F, L, palette_hex, title, project_cfg=None):
 
 # ---------------------------------------------------------------- software renderer (numpy only)
 VIEWS = {
-    'vorne_links':  (-35, 22),   # azimuth (deg, 0 = from the front/+X), elevation
-    'hinten_rechts': (145, 25),
-    'seite':        (90, 0),
-    'oben':         (0, 89),
-    'vorne':        (0, 8),
-    'hinten':       (180, 8),
+    'front_left':  (-35, 22),   # azimuth (deg, 0 = from the front/+X), elevation
+    'rear_right':  (145, 25),
+    'side':        (90, 0),
+    'top':         (0, 89),
+    'front':       (0, 8),
+    'rear':        (180, 8),
 }
 
 
@@ -1090,29 +1091,31 @@ def render_all_views(path_stem, V, F, C, views, size, title=None):
         except OSError:
             font = ImageFont.load_default()
         ImageDraw.Draw(sheet).text((20, 14), title, fill=(40, 40, 40), font=font)
-    sheet.save(f'{path_stem}_render_uebersicht.png', optimize=True)
+    sheet.save(f'{path_stem}_render_overview.png', optimize=True)
 
 
 # ---------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(description='F-Zero X (PAL) Fahrzeuge -> druckbare STL/OBJ/3MF')
-    ap.add_argument('rom', nargs='?', help='Pfad zur europaeischen F-Zero-X-ROM (.z64/.v64/.n64)')
-    ap.add_argument('-o', '--out', default='fzerox_modelle', help='Ausgabeordner (Standard: fzerox_modelle)')
-    ap.add_argument('-m', '--machine', action='append', help='z.B. blue_falcon (mehrfach moeglich; Standard: alle)')
-    ap.add_argument('--list', action='store_true', help='verfuegbare Fahrzeuge auflisten')
-    ap.add_argument('--length', type=float, default=100.0, help='Laenge der Blue Falcon in mm (gemeinsamer Massstab, Standard 100)')
-    ap.add_argument('--thick', type=float, default=1.2, help='Dicke fuer hauchduenne Flaechen (Finnen/Fluegel) in mm')
-    ap.add_argument('--skin', type=int, default=0, choices=range(4), help='Lackierung 0-3 (0 = Standard)')
-    ap.add_argument('--smooth', type=int, default=8, help='Kantenglaettung der Decals: 1 = pixelgenau wie N64-Textur, '
-                    '2/4/8/16 = Pixel-Art-Hochskalierung (Scale2x) fuer saubere Diagonalen')
-    ap.add_argument('--max-colors', type=int, default=16, help='Obergrenze fuer die Anzahl Farben (Standard: alle)')
-    ap.add_argument('--merge', type=float, default=12.0, help='Farben mit Delta-E kleiner als dieser Wert zusammenfassen')
-    ap.add_argument('--no-color', action='store_true', help='nur STL erzeugen')
-    ap.add_argument('--render', action='store_true', help='hochaufgeloeste Renderbilder aus mehreren Perspektiven erzeugen')
-    ap.add_argument('--views', default=','.join(VIEWS), help='Perspektiven, kommagetrennt: ' + ', '.join(VIEWS))
-    ap.add_argument('--render-size', default='2400x1600', help='Bildgroesse BxH in Pixeln (Standard 2400x1600)')
-    ap.add_argument('--map', default='', help='Farben zusammenlegen, z.B. "8=5,4=3" (Farbe 8 wird zu 5, 4 zu 3; '
-                    'Nummern wie im normalen Lauf ausgegeben). Nur sinnvoll zusammen mit -m fuer ein Fahrzeug.')
+    import warnings
+    warnings.filterwarnings('ignore', category=RuntimeWarning)   # degenerate cap triangles are handled explicitly
+    ap = argparse.ArgumentParser(description='F-Zero X (Europe/PAL) vehicles -> printable STL / color 3MF / OBJ')
+    ap.add_argument('rom', nargs='?', help='path to the European F-Zero X ROM (.z64/.v64/.n64)')
+    ap.add_argument('-o', '--out', default='fzerox_models', help='output directory (default: fzerox_models)')
+    ap.add_argument('-m', '--machine', action='append', help='only this vehicle, e.g. blue_falcon (can be repeated; default: all)')
+    ap.add_argument('--list', action='store_true', help='list available vehicles')
+    ap.add_argument('--length', type=float, default=100.0, help='length of the Blue Falcon in mm; all vehicles share this scale (default 100)')
+    ap.add_argument('--thick', type=float, default=1.2, help='minimum thickness for zero-thickness surfaces (fins/wings) in mm (default 1.2)')
+    ap.add_argument('--skin', type=int, default=0, choices=range(4), help='paint scheme 0-3 (0 = default)')
+    ap.add_argument('--smooth', type=int, default=8, help='decal edge smoothing: 1 = pixel-exact like the N64 texture, '
+                    '2/4/8/16 = pixel-art upscaling (Scale2x) for clean diagonals (default 8)')
+    ap.add_argument('--max-colors', type=int, default=16, help='upper limit for the number of colors (default 16)')
+    ap.add_argument('--merge', type=float, default=12.0, help='merge colors whose CIE Delta E is below this value (default 12)')
+    ap.add_argument('--no-color', action='store_true', help='only create STL files')
+    ap.add_argument('--render', action='store_true', help='create high-resolution renders from several viewpoints')
+    ap.add_argument('--views', default=','.join(VIEWS), help='viewpoints, comma separated: ' + ', '.join(VIEWS))
+    ap.add_argument('--render-size', default='2400x1600', help='render size WxH in pixels (default 2400x1600)')
+    ap.add_argument('--map', default='', help='merge colors, e.g. "8=5,4=3" (color 8 becomes 5, 4 becomes 3; '
+                    'numbers as printed in a normal run). Only useful together with -m for one vehicle.')
     a = ap.parse_args()
     recipes = json.loads(zlib.decompress(base64.b64decode(RECIPES_B64)))
     if a.list:
@@ -1120,12 +1123,12 @@ def main():
             print(f'{i + 1:2d}  {r["slug"]:18s} {r["name"]}')
         return
     if not a.rom:
-        ap.error('Pfad zur ROM fehlt')
+        ap.error('path to the ROM is missing')
     rom = load_rom(a.rom)
     os.makedirs(a.out, exist_ok=True)
     sel = [(i, r) for i, r in enumerate(recipes) if not a.machine or r['slug'] in a.machine or str(i + 1) in a.machine]
     if not sel:
-        sys.exit('Keine passende Maschine gefunden (siehe --list).')
+        sys.exit('No matching vehicle found (see --list).')
     mmpu = a.length / 560.0
     overview = []
     for i, r in sel:
@@ -1134,7 +1137,7 @@ def main():
         model = Model(rom, r, a.skin)
         V, F, _, _, info = build(model, mmpu, a.thick, a.smooth, a.merge, a.max_colors, colored=False)
         write_stl(os.path.join(a.out, stem + '.stl'), V, F)
-        msg = f'      STL: {len(F)} Dreiecke, {info["bodies"]} Koerper, Groesse ' + ' x '.join(f'{x:.1f}' for x in V.max(0) - V.min(0)) + ' mm'
+        msg = f'      STL: {len(F)} triangles, {info["bodies"]} body, size ' + ' x '.join(f'{x:.1f}' for x in V.max(0) - V.min(0)) + ' mm'
         print(msg)
         if not a.no_color:
             V, F, L, pal, info = build(model, mmpu, a.thick, a.smooth, a.merge, a.max_colors, colored=True)
@@ -1151,10 +1154,10 @@ def main():
                 remap = -np.ones(len(pal), int); remap[used] = np.arange(len(used))
                 L = remap[L]; pal = pal[used]
             names = [f'{k + 1}_{color_name(c)}_{"%02X%02X%02X" % tuple(int(round(x * 255)) for x in c)}' for k, c in enumerate(pal)]
-            write_obj(os.path.join(a.out, stem + '_farbig.obj'), V, F, L, pal, names)
+            write_obj(os.path.join(a.out, stem + '_color.obj'), V, F, L, pal, names)
             hexes = ['#%02X%02X%02X' % tuple(int(round(x * 255)) for x in c) for c in pal]
-            write_orca_3mf(os.path.join(a.out, stem + '_farbig.3mf'), V, F, L, hexes, f'F-Zero X {r["name"]}')
-            print(f'      farbig: {len(F)} Dreiecke, Farben: ' + ', '.join(names))
+            write_orca_3mf(os.path.join(a.out, stem + '_color.3mf'), V, F, L, hexes, f'F-Zero X {r["name"]}')
+            print(f'      color: {len(F)} triangles, colors: ' + ', '.join(names))
             CF = pal[L]
         else:
             CF = np.full((len(F), 3), 0.7); hexes = []
@@ -1163,11 +1166,11 @@ def main():
             views = [v.strip() for v in a.views.split(',') if v.strip()]
             render_all_views(os.path.join(a.out, stem), V, F, CF, views, (w, h), r['name'])
             overview.append((i + 1, r['name'], os.path.join(a.out, f'{stem}_render_{views[0]}.png'), hexes))
-            print(f'      Renderbilder: {len(views)} Perspektiven')
+            print(f'      renders: {len(views)} viewpoints')
 
     if len(overview) > 1:
-        make_overview(os.path.join(a.out, '00_uebersicht.png'), overview)
-        print('Uebersicht:', os.path.join(a.out, '00_uebersicht.png'))
+        make_overview(os.path.join(a.out, '00_overview.png'), overview)
+        print('Overview:', os.path.join(a.out, '00_overview.png'))
 
 
 def make_overview(path, items, cols=5, tw=720, th=480):
